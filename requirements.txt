@@ -1,0 +1,24 @@
+# ÖNIKA LI 依赖配置
+# 四层AI融合体
+
+# Telegram Bot
+python-telegram-bot==20.7
+
+# HTTP请求
+requests==2.31.0
+
+# 数据解析
+beautifulsoup4==4.12.2
+PyYAML==6.0.1
+
+# 异步支持
+aiohttp==3.9.1
+asyncio==3.4.3
+
+# 工具库
+python-dotenv==1.0.0
+schedule==1.2.0
+
+# 可选：海外模型SDK
+# openai==1.6.0      # Layer 4 (Claude/OpenAI)
+# groq==0.4.0        # Layer 3 (Groq)
