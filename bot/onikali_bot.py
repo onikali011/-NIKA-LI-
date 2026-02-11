@@ -7,11 +7,11 @@
 import os
 import logging
 from telegram import Update, Bot
-from telegram.ext import filters
+from telegram.ext import (
+    filters,
     Updater,
     CommandHandler,
     MessageHandler,
-    filters,
     CallbackContext
 )
 
