@@ -1,18 +1,18 @@
 """
 ÖNIKA LI Telegram Bot
 四层AI融合体 · 统一入口
-适配 python-telegram-bot 13.15
+适配 python-telegram-bot 20.7
 """
 
 import os
 import logging
-from telegram import Update, Bot
+from telegram import Update
 from telegram.ext import (
-    filters,
-    Updater,
+    Application,
     CommandHandler,
     MessageHandler,
-    CallbackContext
+    ContextTypes,
+    filters
 )
 
 # 配置日志
@@ -22,36 +22,38 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 class OnikaliBot:
     """
     ÖNIKA LI Bot 核心
     Layer 1: Kimi (运行中)
     Layer 2-4: 待配置
     """
-    
+
     def __init__(self):
         self.token = os.getenv('TELEGRAM_TOKEN')
         self.chat_id = os.getenv('TELEGRAM_CHAT_ID')
-        
-        # 使用 Updater (v13 版本)
-        self.updater = Updater(token=self.token, use_context=True)
-        self.dp = self.updater.dispatcher
-        
+
+        # v20: 使用 Application 而不是 Updater
+        self.application = Application.builder().token(self.token).build()
+
         # 注册命令
-        self.dp.add_handler(CommandHandler("start", self.cmd_start))
-        self.dp.add_handler(CommandHandler("status", self.cmd_status))
-        self.dp.add_handler(CommandHandler("hello", self.cmd_hello))
-        self.dp.add_handler(CommandHandler("help", self.cmd_help))
-        self.dp.add_handler(CommandHandler("create", self.cmd_create))
-        self.dp.add_handler(CommandHandler("radar", self.cmd_radar))
-        
-        # 普通消息
-        self.dp.add_handler(MessageHandler(Filters.text & ~Filters.command, self.handle_message))
-        
+        self.application.add_handler(CommandHandler("start", self.cmd_start))
+        self.application.add_handler(CommandHandler("status", self.cmd_status))
+        self.application.add_handler(CommandHandler("hello", self.cmd_hello))
+        self.application.add_handler(CommandHandler("help", self.cmd_help))
+        self.application.add_handler(CommandHandler("create", self.cmd_create))
+        self.application.add_handler(CommandHandler("radar", self.cmd_radar))
+
+        # 普通消息 - v20: filters.TEXT 和 filters.COMMAND
+        self.application.add_handler(
+            MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message)
+        )
+
         # 错误处理
-        self.dp.add_error_handler(self.error_handler)
-    
-    def cmd_start(self, update: Update, context: CallbackContext):
+        self.application.add_error_handler(self.error_handler)
+
+    async def cmd_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """启动命令"""
         welcome_text = (
             "🎸 <b>ÖNIKA LI 已激活</b>\n"
@@ -65,9 +67,9 @@ class OnikaliBot:
             "明天配置 API Keys 后启用完全体。\n\n"
             "输入 /help 查看所有指令"
         )
-        update.message.reply_text(welcome_text, parse_mode='HTML')
-    
-    def cmd_status(self, update: Update, context: CallbackContext):
+        await update.message.reply_text(welcome_text, parse_mode='HTML')
+
+    async def cmd_status(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """查看四层状态"""
         status_text = (
             "🎸 <b>ÖNIKA LI 系统状态</b>\n"
@@ -90,11 +92,11 @@ class OnikaliBot:
             "待办事项：0\n"
             "系统健康：✅ 正常"
         )
-        update.message.reply_text(status_text, parse_mode='HTML')
-    
-    def cmd_hello(self, update: Update, context: CallbackContext):
+        await update.message.reply_text(status_text, parse_mode='HTML')
+
+    async def cmd_hello(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """测试对话"""
-        update.message.reply_text(
+        await update.message.reply_text(
             "🎸 ÖNIKA LI 回应\n"
             "━━━━━━━━━━━━━━\n"
             "你好！我是 ÖNIKA LI，四层AI融合体。\n\n"
@@ -110,12 +112,12 @@ class OnikaliBot:
             "试试输入：<code>/create 生成一篇摇滚新闻</code>",
             parse_mode='HTML'
         )
-    
-    def cmd_create(self, update: Update, context: CallbackContext):
+
+    async def cmd_create(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """创建内容"""
         args = context.args
         topic = ' '.join(args) if args else "今日摇滚热点"
-        
+
         response = (
             f"🎸 <b>ÖNIKA LI 接收任务</b>\n"
             f"━━━━━━━━━━━━━━\n"
@@ -126,13 +128,13 @@ class OnikaliBot:
             f"明天四层完全体后将即时生成内容。\n"
             f"当前可通过 GitHub 查看任务队列。"
         )
-        
-        update.message.reply_text(response, parse_mode='HTML')
+
+        await update.message.reply_text(response, parse_mode='HTML')
         logger.info(f"Task created: {topic}")
-    
-    def cmd_radar(self, update: Update, context: CallbackContext):
+
+    async def cmd_radar(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """启动信息雷达"""
-        update.message.reply_text(
+        await update.message.reply_text(
             "🎸 <b>ÖNIKA LI 信息雷达</b>\n"
             "━━━━━━━━━━━━━━\n"
             "扫描源：\n"
@@ -144,8 +146,8 @@ class OnikaliBot:
             "明天配置 Layer 2-3 后将自动扫描海外源。",
             parse_mode='HTML'
         )
-    
-    def cmd_help(self, update: Update, context: CallbackContext):
+
+    async def cmd_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """帮助信息"""
         help_text = (
             "🎸 <b>ÖNIKA LI 指令列表</b>\n"
@@ -166,12 +168,12 @@ class OnikaliBot:
             "/backup - 手动备份\n"
             "/report - 生成日报"
         )
-        update.message.reply_text(help_text, parse_mode='HTML')
-    
-    def handle_message(self, update: Update, context: CallbackContext):
+        await update.message.reply_text(help_text, parse_mode='HTML')
+
+    async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """处理普通消息"""
         text = update.message.text
-        
+
         response = (
             f"🎸 ÖNIKA LI 收到\n"
             f"━━━━━━━━━━━━━━\n"
@@ -182,30 +184,29 @@ class OnikaliBot:
             f"• /status 查看状态\n"
             f"• /radar 启动雷达"
         )
-        update.message.reply_text(response)
-    
-    def error_handler(self, update: object, context: CallbackContext):
+        await update.message.reply_text(response)
+
+    async def error_handler(self, update: object, context: ContextTypes.DEFAULT_TYPE):
         """错误处理"""
         logger.error(f"Update {update} caused error {context.error}")
-        
+
         if update and hasattr(update, 'effective_message'):
-            update.effective_message.reply_text(
+            await update.effective_message.reply_text(
                 "⚠️ ÖNIKA LI 遇到错误\n"
                 "━━━━━━━━━━━━━━\n"
                 "Layer 1 暂时无法处理\n"
                 "正在尝试切换至备用层...\n"
                 "（明天四层完全体后将自动切换）"
             )
-    
+
     def run(self):
         """启动 Bot"""
         logger.info("🎸 ÖNIKA LI Bot 启动...")
         logger.info(f"Token: {self.token[:10]}...")
         logger.info(f"Chat ID: {self.chat_id}")
-        
-        # 启动轮询
-        self.updater.start_polling()
-        self.updater.idle()
+
+        # v20: 使用 run_polling() 而不是 start_polling()
+        self.application.run_polling()
 
 
 if __name__ == "__main__":
