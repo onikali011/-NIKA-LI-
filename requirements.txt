@@ -1,11 +1,12 @@
 # ÖNIKA LI 依赖配置
 # 修复版本兼容性
 
-# Telegram Bot - 降级到稳定版本
-python-telegram-bot==13.15
+# Telegram Bot - 升级到最新稳定版
+python-telegram-bot==20.7
 
 # HTTP请求
 requests==2.31.0
+urllib3==2.1.0
 
 # 数据解析
 beautifulsoup4==4.12.2
@@ -13,6 +14,7 @@ PyYAML==6.0.1
 
 # 异步支持
 aiohttp==3.9.1
+aiohttp-retry==2.8.3
 
 # 工具库
 python-dotenv==1.0.0
