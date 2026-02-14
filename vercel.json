@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "bot/onikali_bot.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "bot/onikali_bot.py"
+    }
+  ],
+  "env": {
+    "TELEGRAM_TOKEN": "@telegram_token",
+    "MOONSHOT_API_KEY": "@moonshot_api_key",
+    "ANTHROPIC_API_KEY": "@anthropic_api_key"
+  }
+}
